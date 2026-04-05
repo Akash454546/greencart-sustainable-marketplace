@@ -22,7 +22,7 @@ export const register = async (req, res) => {
   const validRole = ['buyer', 'seller'].includes(role) ? role : 'buyer';
   const passwordHash = await bcrypt.hash(password, 12);
 
-  const user = await User.create({ name, email, passwordHash, role: validRole });
+  const user = await User.create({ name, email, passwordHash, role: validRole, addresses: [] });
 
   const accessToken = generateAccessToken(user);
   const refreshToken = generateRefreshToken(user);

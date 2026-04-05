@@ -3,6 +3,7 @@ import { fetchMyOrders } from '../api/index.js';
 import useAuthStore from '../store/authStore.js';
 import { Link } from 'react-router-dom';
 import BackButton from '../components/BackButton.jsx';
+import { formatPrice } from '../utils/currency.js';
 
 const STEPS = ['pending', 'confirmed', 'shipped', 'delivered'];
 const STEP_LABELS = ['Placed', 'Confirmed', 'Shipped', 'Delivered'];
@@ -63,7 +64,8 @@ export default function MyOrders() {
     queryKey: ['orders'],
     queryFn: fetchMyOrders,
     enabled: !!user,
-    refetchInterval: 30000,
+    staleTime: 1 * 60 * 1000,  // 1 minute - no auto refetch
+    gcTime: 5 * 60 * 1000,     // 5 minutes
   });
 
   if (!user) {
@@ -80,12 +82,15 @@ export default function MyOrders() {
     return <div className="max-w-3xl mx-auto px-4 py-12"><p className="text-gray-400">Loading orders...</p></div>;
   }
 
+  // Handle both array response and paginated response
+  const ordersList = Array.isArray(orders) ? orders : (orders?.orders || []);
+
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
       <BackButton />
       <h1 className="font-heading text-2xl font-bold text-forest mb-6">My Orders</h1>
 
-      {(!orders || orders.length === 0) && (
+      {(!ordersList || ordersList.length === 0) && (
         <div className="text-center py-16">
           <p className="text-gray-400 mb-4">You haven't placed any orders yet.</p>
           <Link to="/" className="text-forest font-medium hover:underline">Start shopping →</Link>
@@ -93,7 +98,7 @@ export default function MyOrders() {
       )}
 
       <div className="space-y-6">
-        {orders?.map((order) => {
+        {ordersList?.map((order) => {
           const subtotal = order.items.reduce((s, i) => s + i.priceAtPurchase * i.qty, 0);
           return (
             <div key={order._id} className="bg-white border rounded-xl p-5 space-y-4">
@@ -122,9 +127,9 @@ export default function MyOrders() {
                     />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{item.product?.name}</p>
-                      <p className="text-xs text-gray-500">Qty: {item.qty} · ${item.priceAtPurchase.toFixed(2)} each</p>
+                      <p className="text-xs text-gray-500">Qty: {item.qty} · {formatPrice(item.priceAtPurchase)} each</p>
                     </div>
-                    <p className="font-medium text-sm">${(item.priceAtPurchase * item.qty).toFixed(2)}</p>
+                    <p className="font-medium text-sm">{formatPrice(item.priceAtPurchase * item.qty)}</p>
                   </div>
                 ))}
               </div>
@@ -134,10 +139,10 @@ export default function MyOrders() {
                 <span className="text-gray-500">🌿 Carbon: {order.totalCarbon?.toFixed(1)} kg CO₂e</span>
                 <div className="text-right">
                   {order.ecoDiscount > 0 && (
-                    <p className="text-xs text-green-600">Eco discount: -${order.ecoDiscount.toFixed(2)}</p>
+                    <p className="text-xs text-green-600">Eco discount: -{formatPrice(order.ecoDiscount)}</p>
                   )}
                   <span className="font-heading font-bold text-forest">
-                    Total: ${(subtotal - (order.ecoDiscount || 0)).toFixed(2)}
+                    Total: {formatPrice(subtotal - (order.ecoDiscount || 0))}
                   </span>
                 </div>
               </div>

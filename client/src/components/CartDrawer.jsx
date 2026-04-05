@@ -1,6 +1,7 @@
 import useCartStore from '../store/cartStore.js';
 import useAuthStore from '../store/authStore.js';
 import { useNavigate } from 'react-router-dom';
+import { formatPrice } from '../utils/currency.js';
 
 export default function CartDrawer() {
   const { items, isOpen, closeCart, removeItem, updateQty, clearCart } = useCartStore();
@@ -72,7 +73,7 @@ export default function CartDrawer() {
                 </div>
               </div>
               <div className="text-right flex flex-col justify-between">
-                <span className="font-semibold text-sm">${(product.price * qty).toFixed(2)}</span>
+                <span className="font-semibold text-sm">{formatPrice(product.price * qty)}</span>
                 <button
                   onClick={() => removeItem(product._id)}
                   className="text-xs text-red-500 hover:text-red-700"
@@ -94,7 +95,7 @@ export default function CartDrawer() {
             </div>
             <div className="flex items-center justify-between font-heading text-lg font-bold">
               <span>Subtotal</span>
-              <span className="text-forest">${subtotal.toFixed(2)}</span>
+              <span className="text-forest">{formatPrice(subtotal)}</span>
             </div>
             <button
               onClick={handleCheckout}

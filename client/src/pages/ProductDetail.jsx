@@ -3,6 +3,7 @@ import { useProduct } from '../hooks/useProducts.js';
 import EcoBadge from '../components/EcoBadge.jsx';
 import useCartStore from '../store/cartStore.js';
 import BackButton from '../components/BackButton.jsx';
+import { formatPrice } from '../utils/currency.js';
 
 const FALLBACK_IMG = 'https://placehold.co/600x600/1A4A2E/F9F6F0?text=GreenCart';
 
@@ -56,7 +57,7 @@ export default function ProductDetail() {
             <span className="text-sm text-gray-500">🌿 {product.carbonFootprint} kg CO₂e per unit</span>
           </div>
 
-          <p className="text-2xl font-bold text-forest">${product.price.toFixed(2)}</p>
+          <p className="text-2xl font-bold text-forest">{formatPrice(product.price)}</p>
 
           <p className="text-gray-600 leading-relaxed">{product.description}</p>
 

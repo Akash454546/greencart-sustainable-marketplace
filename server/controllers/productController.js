@@ -6,9 +6,14 @@ export const getProducts = async (req, res) => {
 
   const filter = { isActive: true };
 
-  // Full-text search
-  if (q) {
-    filter.$text = { $search: q };
+  // Case-insensitive search on name, description, and tags
+  if (q && q.trim()) {
+    const searchRegex = new RegExp(q.trim(), 'i');
+    filter.$or = [
+      { name: searchRegex },
+      { description: searchRegex },
+      { tags: searchRegex },
+    ];
   }
 
   if (category) {
@@ -60,25 +65,50 @@ export const getProduct = async (req, res) => {
 };
 
 export const createProduct = async (req, res) => {
-  const seller = await Seller.findOne({ user: req.user.id });
-  if (!seller) return res.status(403).json({ message: 'Seller profile required' });
+  try {
+    const seller = await Seller.findOne({ user: req.user.id });
+    if (!seller) return res.status(403).json({ message: 'Seller profile required' });
 
-  const product = await Product.create({ ...req.body, seller: seller._id });
-  res.status(201).json(product);
+    // Validate required fields
+    if (!req.body.name || !req.body.price) {
+      return res.status(400).json({ message: 'Name and price are required' });
+    }
+
+    const product = await Product.create({ 
+      ...req.body, 
+      seller: seller._id,
+      name: req.body.name.trim(),
+      description: req.body.description?.trim() || '',
+    });
+    
+    res.status(201).json(product);
+  } catch (error) {
+    console.error('Create product error:', error.message);
+    res.status(400).json({ message: error.message || 'Failed to create product' });
+  }
 };
 
 export const updateProduct = async (req, res) => {
-  const seller = await Seller.findOne({ user: req.user.id });
-  if (!seller) return res.status(403).json({ message: 'Seller profile required' });
+  try {
+    const seller = await Seller.findOne({ user: req.user.id });
+    if (!seller) return res.status(403).json({ message: 'Seller profile required' });
 
-  const product = await Product.findOneAndUpdate(
-    { _id: req.params.id, seller: seller._id },
-    req.body,
-    { new: true, runValidators: true }
-  );
+    const product = await Product.findOneAndUpdate(
+      { _id: req.params.id, seller: seller._id },
+      {
+        ...req.body,
+        name: req.body.name?.trim(),
+        description: req.body.description?.trim(),
+      },
+      { new: true, runValidators: true }
+    );
 
-  if (!product) return res.status(404).json({ message: 'Product not found or unauthorized' });
-  res.json(product);
+    if (!product) return res.status(404).json({ message: 'Product not found or unauthorized' });
+    res.json(product);
+  } catch (error) {
+    console.error('Update product error:', error.message);
+    res.status(400).json({ message: error.message || 'Failed to update product' });
+  }
 };
 
 export const deleteProduct = async (req, res) => {

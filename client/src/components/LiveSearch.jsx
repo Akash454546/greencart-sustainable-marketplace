@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useDebounce from '../hooks/useDebounce.js';
 import { useProducts } from '../hooks/useProducts.js';
+import { formatPrice } from '../utils/currency.js';
 
 export default function LiveSearch() {
   const [query, setQuery] = useState('');
@@ -67,7 +68,7 @@ export default function LiveSearch() {
               />
               <div className="min-w-0">
                 <p className="text-sm font-medium truncate">{p.name}</p>
-                <p className="text-xs text-gray-500">${p.price?.toFixed(2)} · 🍃 {p.ecoScore}</p>
+                <p className="text-xs text-gray-500">{formatPrice(p.price)} · 🍃 {p.ecoScore}</p>
               </div>
             </button>
           ))}

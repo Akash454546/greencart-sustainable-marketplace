@@ -22,7 +22,7 @@ const userSchema = new mongoose.Schema(
     passwordHash: { type: String, required: true },
     role: { type: String, enum: ['buyer', 'seller', 'admin'], default: 'buyer' },
     refreshToken: { type: String, default: null },
-    addresses: [addressSchema],
+    addresses: { type: [addressSchema], default: [] },
   },
   { timestamps: true }
 );

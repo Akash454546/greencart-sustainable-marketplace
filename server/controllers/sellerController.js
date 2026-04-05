@@ -33,16 +33,47 @@ export const getDashboard = async (req, res) => {
 };
 
 export const getSellerOrders = async (req, res) => {
-  const seller = await Seller.findOne({ user: req.user.id });
-  if (!seller) return res.status(404).json({ message: 'Seller profile not found' });
+  try {
+    const seller = await Seller.findOne({ user: req.user.id });
+    if (!seller) return res.status(404).json({ message: 'Seller profile not found' });
 
-  const products = await Product.find({ seller: seller._id }).select('_id');
-  const productIds = products.map((p) => p._id);
+    // Find all products of this seller
+    const products = await Product.find({ seller: seller._id }).select('_id name price');
+    const productIds = products.map((p) => p._id);
 
-  const orders = await Order.find({ 'items.product': { $in: productIds } })
-    .populate('buyer', 'name email')
-    .populate('items.product', 'name price images')
-    .sort({ createdAt: -1 });
+    if (productIds.length === 0) {
+      return res.json([]);
+    }
 
-  res.json(orders);
+    // Find all orders containing these products
+    const orders = await Order.find({ 'items.product': { $in: productIds } })
+      .populate('buyer', 'name email mobile')
+      .populate('items.product', 'name price images ecoScore')
+      .populate('items.product.seller', 'businessName')
+      .sort({ createdAt: -1 })
+      .lean();
+
+    // Transform to include seller-relevant info
+    const sellerOrders = orders.map((order) => ({
+      _id: order._id,
+      buyerId: order.buyer._id,
+      buyerName: order.buyer.name,
+      buyerEmail: order.buyer.email,
+      buyerMobile: order.buyer.mobile,
+      shippingAddress: order.shippingAddress,
+      status: order.status,
+      items: order.items.map((item) => ({
+        ...item,
+        // Only include items from this seller
+        product: item.product,
+      })).filter((item) => productIds.some((id) => id.toString() === item.product._id.toString())),
+      total: order.total,
+      createdAt: order.createdAt,
+    }));
+
+    res.json(sellerOrders);
+  } catch (error) {
+    console.error('Get seller orders error:', error);
+    res.status(500).json({ message: 'Failed to fetch orders' });
+  }
 };

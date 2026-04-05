@@ -2,6 +2,7 @@ import { useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import EcoBadge from './EcoBadge.jsx';
 import useCartStore from '../store/cartStore.js';
+import { formatPrice } from '../utils/currency.js';
 
 export default function ProductCard({ product }) {
   const addItem = useCartStore((s) => s.addItem);
@@ -47,7 +48,7 @@ export default function ProductCard({ product }) {
           <h3 className="font-heading font-semibold text-forest truncate">{product.name}</h3>
         </Link>
         <div className="flex items-center justify-between">
-          <span className="text-lg font-bold text-forest">${product.price.toFixed(2)}</span>
+          <span className="text-lg font-bold text-forest">{formatPrice(product.price)}</span>
           <span className="text-xs text-gray-500">🌿 {product.carbonFootprint} kg CO₂e</span>
         </div>
         <button

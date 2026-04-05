@@ -7,7 +7,7 @@ const certificationSchema = new mongoose.Schema(
     issuingBody: { type: String, required: true, trim: true },
     issueDate: { type: Date, required: true },
     expiryDate: { type: Date },
-    documentUrl: { type: String, default: '' },
+    documentUrl: { type: String, default: '' }, // Base64 image data or URL
     status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
   },
   { timestamps: true }
